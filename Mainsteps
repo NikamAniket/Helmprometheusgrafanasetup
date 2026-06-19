@@ -1,0 +1,120 @@
+# Prometheus & Grafana Setup on GKE
+
+### 1. Verify Cluster Connection
+
+```bash
+kubectl get nodes
+```
+
+Checks if Cloud Shell is connected to the GKE cluster.
+
+---
+
+### 2. Create Monitoring Namespace
+
+```bash
+kubectl create ns monitor
+kubectl get ns
+```
+
+Creates a dedicated namespace for monitoring resources.
+
+---
+
+### 3. Add Helm Repository
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+```
+
+Adds and updates the Prometheus Helm charts repository.
+
+---
+
+### 4. Install Prometheus & Grafana
+
+```bash
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitor
+```
+
+Deploys Prometheus, Grafana, AlertManager, and exporters.
+
+---
+
+### 5. Verify Deployment
+
+```bash
+kubectl get pods -n monitor
+kubectl get svc -n monitor
+kubectl get deploy -n monitor
+```
+
+Checks pods, services, and deployments status.
+
+---
+
+### 6. Expose Grafana
+
+```bash
+kubectl patch svc kube-prometheus-stack-grafana -n monitor -p '{"spec":{"type":"LoadBalancer"}}'
+```
+
+Creates a public LoadBalancer for Grafana access.
+
+---
+
+### 7. Get Grafana Password
+
+```bash
+kubectl -n monitor get secrets kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+```
+
+Retrieves Grafana admin password.
+
+**Username:** `admin`
+
+---
+
+### 8. Get External IP
+
+```bash
+kubectl get svc -n monitor
+```
+
+Copy the `EXTERNAL-IP` of Grafana service.
+
+---
+
+### 9. Access Grafana
+
+```text
+http://<EXTERNAL-IP>:3000
+```
+
+Login using:
+
+* Username: `admin`
+* Password: Retrieved in Step 7
+
+---
+
+### Useful Commands
+
+```bash
+kubectl get all -n monitor
+```
+
+View all monitoring resources.
+
+```bash
+helm list -n monitor
+```
+
+View installed Helm releases.
+
+```bash
+helm uninstall kube-prometheus-stack -n monitor
+```
+
+Remove Prometheus & Grafana stack.
